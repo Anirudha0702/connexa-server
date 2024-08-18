@@ -6,7 +6,7 @@ export class AuthService {
   login(credentials: { email: string; password: string }) {
     return 'login' + credentials;
   }
-  signUp(credentials:CreateUserDto) {
+  signUp(credentials: CreateUserDto) {
     return 'signUp' + credentials;
   }
 }
