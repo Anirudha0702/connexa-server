@@ -3,9 +3,9 @@ import { HydratedDocument, Schema as mongooseSchema } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 export type UserDocument = HydratedDocument<User>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class User {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   @ApiProperty()
   email: string;
 
@@ -15,7 +15,7 @@ export class User {
 
   @Prop({ required: true })
   @ApiProperty()
-  password: number;
+  password: string;
 
   @Prop({ required: true })
   @ApiProperty()
@@ -28,6 +28,10 @@ export class User {
   @Prop({ required: true })
   @ApiProperty()
   lastName: string;
+
+  @Prop({ required: true })
+  @ApiProperty()
+  dob: Date;
 
   @Prop()
   @ApiProperty()
@@ -50,6 +54,10 @@ export class User {
   followers: User[];
   //posts[]
   //likes[]
+  // @Prop()
+  @Prop()
+  @ApiProperty()
+  refreshToken: string | null = null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
