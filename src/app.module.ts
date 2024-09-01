@@ -11,7 +11,8 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './modules/user/user.module';
 // import { JwtModule } from '@nestjs/jwt';
-import { Verify } from './common/middlewares/verify.middleware';
+import { VerifyMiddleware } from './common/middlewares/verify.middleware';
+import { MailerModule } from '@nestjs-modules/mailer';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +25,15 @@ import { Verify } from './common/middlewares/verify.middleware';
         uri: process.env.MONGO_URI,
       }),
     }),
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.EMAIL_HOST,
+        auth: {
+          user: process.env.EMAIL_USERNAME,
+          pass: process.env.GOOGLE_APP_PASSWORD,
+        },
+      },
+    }),
     AuthModule,
     UserModule,
   ],
@@ -32,12 +42,14 @@ import { Verify } from './common/middlewares/verify.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    console.log('AppModule configured');
+    // console.log(process.env.REDIS_HOST, process.env.REDIS_PORT);
     consumer
-      .apply(Verify)
+      .apply(VerifyMiddleware)
       .exclude(
         { path: 'auth/login', method: RequestMethod.ALL },
-        { path: 'auth/SIGNUP', method: RequestMethod.ALL },
+        { path: 'auth/signup', method: RequestMethod.ALL },
+        { path: 'auth/verify/:validator', method: RequestMethod.ALL },
+        { path: '/', method: RequestMethod.ALL },
       )
       .forRoutes('*');
   }

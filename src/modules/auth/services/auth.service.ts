@@ -1,14 +1,17 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
 import { CreateUserDto } from '../../user/dtos/create-user.req';
 import { UserService } from '../../user/services/user.service';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/modules/user/model/user.model';
 import { JwtService } from '@nestjs/jwt';
+import { VerificationEmailProducer } from '../jobs/verification-email.producer';
+import { Response } from 'express';
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private readonly jobProducer: VerificationEmailProducer,
   ) {}
   async login(credentials: { email: string; password: string }) {
     try {
@@ -29,11 +32,10 @@ export class AuthService {
       if (!isPasswordMatch) {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
       }
-      const { access_token, refresh_token } = await this.generateTokens({
+      const { access_token } = await this.generateTokens({
         email: user.email,
         sub: user._id.toString(),
       });
-      await this.userService.updateToken(user.email, refresh_token);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, refreshToken, ...info } = user.toObject();
       return { ...info, access_token };
@@ -61,24 +63,52 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const hashedPassword = await this.hashPassword(credentials.password);
-    credentials.password = '' + hashedPassword;
-    const user: User = {
-      ...credentials,
-      emailVerified: false,
-      following: [],
-      followers: [],
-      photoURL: '',
-      refreshToken: '',
-    };
-    return await this.userService.create(user);
+    try {
+      const hashedPassword = await this.hashPassword(credentials.password);
+      credentials.password = '' + hashedPassword;
+      const mailCipher = this.jwtService.sign(
+        {
+          email: credentials.email,
+        },
+        { expiresIn: '300s' },
+      );
+      const user: User = {
+        ...credentials,
+        emailVerified: false,
+        following: [],
+        followers: [],
+        photoURL: '',
+        refreshToken: '',
+      };
+      await this.userService.create(user);
+      await this.jobProducer.sendVerificationEmail(
+        mailCipher,
+        credentials.firstName,
+        credentials.email,
+      );
+      return { message: 'User created successfully' };
+    } catch (error) {
+      // console.log(error);
+      throw new HttpException(error.message, error.status);
+    }
   }
   async generateTokens(payload: { email: string; sub: string }) {
-    const refreshToken = this.jwtService.sign(
+    const access_token = this.jwtService.sign(
       { payload },
       { expiresIn: '30d' },
     );
-    const access_token = this.jwtService.sign({ payload }, { expiresIn: '1d' });
-    return { access_token, refresh_token: refreshToken };
+    return { access_token };
+  }
+  async verify(validator: string, @Res() res: Response) {
+    try {
+      const { email } = await this.jwtService.verifyAsync(validator);
+      if (email) {
+        await this.userService.verifyUser(email);
+        // res.redirect('http://localhost:3000/login');
+        res.send('<h1>Email verified successfully</h1>');
+      }
+    } catch (error) {
+      res.send('<h1>Invalid token or Token has expired</h1>');
+    }
   }
 }

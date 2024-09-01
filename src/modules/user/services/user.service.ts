@@ -13,7 +13,9 @@ export class UserService {
       return { message: 'User created successfully' };
     } catch (error) {
       if (error.code === 11000) {
-        throw new HttpException('Email already exists', HttpStatus.CONFLICT);
+        throw new HttpException('Email already exists', HttpStatus.CONFLICT, {
+          cause: error,
+        });
       }
 
       throw new HttpException(
@@ -35,10 +37,10 @@ export class UserService {
       throw new Error('An error occurred while retrieving the user.');
     }
   }
-  async updateToken(email: string, refreshToken: string): Promise<void> {
+  async verifyUser(email: string): Promise<boolean> {
     try {
-      await this.userModel.updateOne({ email }, { refreshToken: refreshToken });
-      return;
+      await this.userModel.updateOne({ email }, { emailVerified: true });
+      return true;
     } catch (error) {
       throw new HttpException(
         'Internal server error',
