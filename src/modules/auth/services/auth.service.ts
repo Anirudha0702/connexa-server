@@ -3,7 +3,7 @@ import { CreateUserDto } from '../../user/dtos/create-user.req';
 import { UserService } from '../../user/services/user.service';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/modules/user/model/user.model';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { VerificationEmailProducer } from '../jobs/verification-email.producer';
 import { Response } from 'express';
 @Injectable()
@@ -70,7 +70,7 @@ export class AuthService {
         {
           email: credentials.email,
         },
-        { expiresIn: '300s' },
+        { expiresIn: '300s' } as JwtSignOptions,
       );
       const user: User = {
         ...credentials,
@@ -93,10 +93,9 @@ export class AuthService {
     }
   }
   async generateTokens(payload: { email: string; sub: string }) {
-    const access_token = this.jwtService.sign(
-      { payload },
-      { expiresIn: '30d' },
-    );
+    const access_token = this.jwtService.sign(payload, {
+      expiresIn: '30d',
+    } as JwtSignOptions);
     return { access_token };
   }
   async verify(validator: string, @Res() res: Response) {
