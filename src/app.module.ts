@@ -4,6 +4,7 @@ import {
   MiddlewareConsumer,
   RequestMethod,
 } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -20,9 +21,19 @@ import { MailerModule } from '@nestjs-modules/mailer';
       envFilePath: '.env',
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
+    BullModule.forRootAsync({
+      useFactory: () => ({
+        connection: {
+          host: process.env.REDIS_HOST,
+          port: parseInt(process.env.REDIS_PORT, 10),
+          username: process.env.REDIS_USER,
+          password: process.env.REDIS_PASSWORD,
+        },
+      }),
+    }),
     MongooseModule.forRootAsync({
       useFactory: () => ({
-        uri: process.env.MONGO_URI,
+        uri: process.env.MONGODB_URI,
       }),
     }),
     MailerModule.forRoot({

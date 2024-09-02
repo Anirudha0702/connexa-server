@@ -7,6 +7,6 @@ export class AppController {
   @Get()
   async getHello(): Promise<any> {
     // return process.env.JWT_SECRET;
-    this.appService.getHello();
+    return this.appService.getHello();
   }
 }
