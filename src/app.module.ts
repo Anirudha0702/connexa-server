@@ -10,10 +10,22 @@ import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserModule } from './modules/user/user.module';
 // import { JwtModule } from '@nestjs/jwt';
 import { VerifyMiddleware } from './common/middlewares/verify.middleware';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { DevtoolsModule } from '@nestjs/devtools-integration';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import {
+  getBullMqConfig,
+  getMongooseConfig,
+  getTypeOrmConfig,
+} from './config/database/database.config';
+import { MailerConfig } from './config/mail/mail.config';
+import { UserModule } from './modules/user/user.module';
+import { FollowModule } from './modules/follow/follow.module';
+import { LikeModule } from './modules/like/like.module';
+import { CommentModule } from './modules/comment/comment.module';
+import { PostModule } from './modules/post/post.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -22,31 +34,24 @@ import { MailerModule } from '@nestjs-modules/mailer';
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     BullModule.forRootAsync({
-      useFactory: () => ({
-        connection: {
-          host: process.env.REDIS_HOST,
-          port: parseInt(process.env.REDIS_PORT, 10),
-          username: process.env.REDIS_USER,
-          password: process.env.REDIS_PASSWORD,
-        },
-      }),
+      useFactory: getBullMqConfig,
     }),
     MongooseModule.forRootAsync({
-      useFactory: () => ({
-        uri: process.env.MONGODB_URI,
-      }),
+      useFactory: getMongooseConfig,
     }),
-    MailerModule.forRoot({
-      transport: {
-        host: process.env.EMAIL_HOST,
-        auth: {
-          user: process.env.EMAIL_USERNAME,
-          pass: process.env.GOOGLE_APP_PASSWORD,
-        },
-      },
+    TypeOrmModule.forRootAsync({
+      useFactory: getTypeOrmConfig,
+    }),
+    MailerModule.forRoot(MailerConfig()),
+    DevtoolsModule.register({
+      http: process.env.NODE_ENV !== 'production',
     }),
     AuthModule,
     UserModule,
+    FollowModule,
+    LikeModule,
+    CommentModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
