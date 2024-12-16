@@ -1,6 +1,5 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -28,17 +27,17 @@ export class UserService {
     throw new NotImplementedException();
   }
 
-  findOne(id: number) {
-    throw new NotImplementedException();
-  }
+  // findOne(id: number) {
+  //   throw new NotImplementedException();
+  // }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    throw new NotImplementedException();
-  }
+  // update(id: number, updateUserDto: UpdateUserDto) {
+  //   throw new NotImplementedException();
+  // }
   findOneByEmail(email: string) {
-    throw new NotImplementedException();
+    return this.userRepository.findOneBy({ email });
   }
-  remove(id: number) {
-    throw new NotImplementedException();
-  }
+  // remove(id: number) {
+  //   throw new NotImplementedException();
+  // }
 }

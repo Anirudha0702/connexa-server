@@ -1,6 +1,5 @@
-import { Body, Controller, Param, Post, Get, Res } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
-import { Response } from 'express';
 import { CreateUserDto } from 'src/modules/user/dto/create-user.dto';
 @Controller('auth')
 export class AuthController {
@@ -13,8 +12,8 @@ export class AuthController {
   signUp(@Body() credentials: CreateUserDto) {
     return this.authService.signUp(credentials);
   }
-  @Get('verify/:validator')
-  async verify(@Param('validator') validator: string, @Res() res: Response) {
-    return this.authService.verify(validator, res);
-  }
+  // @Get('verify/:validator')
+  // async verify(@Param('validator') validator: string, @Res() res: Response) {
+  //   return this.authService.verify(validator, res);
+  // }
 }
